@@ -1,0 +1,912 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>OpenRA.Game</name>
+    </assembly>
+    <members>
+        <member name="M:OpenRA.Activities.Activity.Tick(OpenRA.Actor)">
+            <summary>
+            <para>
+            Called every tick to run activity logic. Returns false if the activity should
+            remain active, or true if it is complete. Cancelled activities must ensure they
+            return the actor to a consistent state before returning true.
+            </para>
+            <para>
+            Child activities can be queued using QueueChild, and these will be ticked
+            instead of the parent while they are active. Activities that need to run logic
+            in parallel with child activities should set ChildHasPriority to false and
+            manually call TickChildren.
+            </para>
+            <para>
+            Queuing one or more child activities and returning true is valid, and causes
+            the activity to be completed immediately (without ticking again) once the
+            children have completed.
+            </para>
+            </summary>
+        </member>
+        <member name="M:OpenRA.Activities.Activity.OnFirstRun(OpenRA.Actor)">
+            <summary>
+            Runs once immediately before the first Tick() execution.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Activities.Activity.OnLastRun(OpenRA.Actor)">
+            <summary>
+            Runs once immediately after the last Tick() execution.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Activities.Activity.OnActorDispose(OpenRA.Actor)">
+            <summary>
+            Runs once on Actor.Dispose() (through OnActorDisposeOuter) and can be used to perform activity clean-up on actor death/disposal,
+            for example by force-triggering OnLastRun (which would otherwise be skipped).
+            </summary>
+        </member>
+        <member name="M:OpenRA.Activities.Activity.OnActorDisposeOuter(OpenRA.Actor)">
+            <summary>
+            Runs once on Actor.Dispose().
+            Main purpose is to ensure ChildActivity.OnActorDispose runs as well (which isn't otherwise accessible due to protection level).
+            </summary>
+        </member>
+        <member name="M:OpenRA.Activities.Activity.PrintActivityTree(OpenRA.Actor,OpenRA.Activities.Activity,System.Int32)">
+            <summary>
+            <para>Prints the activity tree, starting from the top or optionally from a given origin.</para>
+            <para>
+            Call this method from any place that's called during a tick, such as the Tick() method itself or
+            the Before(First|Last)Run() methods. The origin activity will be marked in the output.
+            </para>
+            </summary>
+            <param name="self">The actor performing this activity.</param>
+            <param name="origin">Activity from which to start traversing, and which to mark. If null, mark the calling activity, and start traversal from the top.</param>
+            <param name="level">Initial level of indentation.</param>
+        </member>
+        <member name="F:OpenRA.Actor.InvalidConditionToken">
+            <summary>Value used to represent an invalid token.</summary>
+        </member>
+        <member name="F:OpenRA.Actor.ConditionState.Notifiers">
+            <summary>Delegates that have registered to be notified when this condition changes.</summary>
+        </member>
+        <member name="F:OpenRA.Actor.ConditionState.Tokens">
+            <summary>Unique integers identifying granted instances of the condition.</summary>
+        </member>
+        <member name="F:OpenRA.Actor.conditionTokens">
+            <summary>Each granted condition receives a unique token that is used when revoking.</summary>
+        </member>
+        <member name="F:OpenRA.Actor.conditionCache">
+            <summary>Cache of condition -> enabled state for quick evaluation of token counter conditions.</summary>
+        </member>
+        <member name="F:OpenRA.Actor.readOnlyConditionCache">
+            <summary>Read-only version of conditionCache that is passed to IConditionConsumers.</summary>
+        </member>
+        <member name="M:OpenRA.Actor.ChangeOwnerSync(OpenRA.Player)">
+            <summary>
+            Change the actors owner without queuing a FrameEndTask.
+            This must only be called from inside an existing FrameEndTask.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Actor.GrantCondition(System.String)">
+            <summary>
+            Grants a specified condition if it is valid.
+            Otherwise, just returns InvalidConditionToken.
+            </summary>
+            <returns>The token that is used to revoke this condition.</returns>
+        </member>
+        <member name="M:OpenRA.Actor.RevokeCondition(System.Int32)">
+            <summary>
+            Revokes a previously granted condition.
+            </summary>
+            <param name="token">The token ID returned by GrantCondition.</param>
+            <returns>The invalid token ID.</returns>
+        </member>
+        <member name="M:OpenRA.Actor.TokenValid(System.Int32)">
+            <summary>Returns whether the specified token is valid for RevokeCondition.</summary>
+        </member>
+        <member name="M:OpenRA.ExternalMods.ClearInvalidRegistrations(OpenRA.ModRegistration)">
+            <summary>
+            Removes invalid mod registrations:
+            <list type="bullet">
+            <item>LaunchPath no longer exists.</item>
+            <item>LaunchPath and mod id matches the active mod, but the version is different.</item>
+            <item>Filename doesn't match internal key.</item>
+            <item>Fails to parse as a mod registration.</item>
+            </list>
+            </summary>
+        </member>
+        <member name="M:OpenRA.Exts.OwnerColor(OpenRA.Actor)">
+            <summary>Returns <see cref="T:OpenRA.Primitives.Color"/> of the <paramref name="actor"/>, taking <see cref="P:OpenRA.Actor.EffectiveOwner"/> into account.</summary>
+        </member>
+        <member name="M:OpenRA.FileSystem.FileSystem.IsExternalFile(System.String)">
+            <summary>
+            Returns true if the given filename references any file outside the mod mount.
+            </summary>
+        </member>
+        <member name="M:OpenRA.FileSystem.IPackageLoader.TryParsePackage(System.IO.Stream,System.String,OpenRA.FileSystem.FileSystem,OpenRA.FileSystem.IReadOnlyPackage@)">
+            <summary>
+            Attempt to parse a stream as this type of package.
+            If successful, the loader is expected to take ownership of `s` and dispose it once done.
+            If unsuccessful, the loader is expected to return the stream position to where it started.
+            </summary>
+        </member>
+        <member name="M:OpenRA.FluentProvider.TryGetModMessage(System.String,System.String@,System.Object[])">
+            <summary>Should only be used by <see cref="T:OpenRA.MapPreview"/>.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.StartTimeUtc">
+            <summary>Game start timestamp (when the recoding started).</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.EndTimeUtc">
+            <summary>Game end timestamp (when the recoding stopped).</summary>
+        </member>
+        <member name="P:OpenRA.GameInformation.Duration">
+            <summary>Gets the game's duration, from the time the game started until the replay recording stopped.</summary>
+        </member>
+        <member name="M:OpenRA.GameInformation.AddPlayer(OpenRA.Player,OpenRA.Network.Session)">
+            <summary>Adds the player information at start-up.</summary>
+        </member>
+        <member name="M:OpenRA.GameInformation.GetPlayer(OpenRA.Player)">
+            <summary>Gets the player information for the specified runtime player instance.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.Name">
+            <summary>The player name, not guaranteed to be unique.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.FactionName">
+            <summary>The faction's display name.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.FactionId">
+            <summary>The faction ID, a.k.a. the faction's internal name.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.DisplayFactionName">
+            <summary>The faction (including Random, etc.) that was selected in the lobby.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.Team">
+            <summary>The team ID on start-up, or 0 if the player is not part of a team.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.IsRandomFaction">
+            <summary>True if the faction was chosen at random; otherwise, false.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.IsRandomSpawnPoint">
+            <summary>True if the spawn point was chosen at random; otherwise, false.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.Fingerprint">
+            <summary>Player authentication fingerprint for the OpenRA forum.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.Outcome">
+            <summary>The game outcome for this player.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.OutcomeTimestampUtc">
+            <summary>The time when this player won or lost the game.</summary>
+        </member>
+        <member name="F:OpenRA.GameInformation.Player.DisconnectFrame">
+            <summary>The frame at which this player disconnected.</summary>
+        </member>
+        <member name="T:OpenRA.ActorInfo">
+            <summary>
+            A unit/building inside the game. Every rules starts with one and adds trait to it.
+            </summary>
+        </member>
+        <member name="F:OpenRA.ActorInfo.Name">
+            <summary>
+            The actor name can be anything, but the sprites used in the Render*: traits default to this one.
+            If you add an ^ in front of the name, the engine will recognize this as a collection of traits
+            that can be inherited by others (using Inherits:) and not a real unit.
+            You can remove inherited traits by adding a - in front of them as in -TraitName: to inherit everything, but this trait.
+            </summary>
+        </member>
+        <member name="M:OpenRA.GameRules.WeaponInfo.#ctor">
+            <summary>
+            This constructor is used solely for documentation generation.
+            </summary>
+        </member>
+        <member name="M:OpenRA.GameRules.WeaponInfo.IsValidAgainst(OpenRA.Traits.Target@,OpenRA.World,OpenRA.Actor)">
+            <summary>Checks if the weapon is valid against (can target) the target.</summary>
+        </member>
+        <member name="M:OpenRA.GameRules.WeaponInfo.IsValidAgainst(OpenRA.Actor,OpenRA.Actor)">
+            <summary>Checks if the weapon is valid against (can target) the actor.</summary>
+        </member>
+        <member name="M:OpenRA.GameRules.WeaponInfo.IsValidAgainst(OpenRA.Traits.FrozenActor,OpenRA.Actor)">
+            <summary>Checks if the weapon is valid against (can target) the frozen actor.</summary>
+        </member>
+        <member name="M:OpenRA.GameRules.WeaponInfo.Impact(OpenRA.Traits.Target@,OpenRA.GameRules.WarheadArgs)">
+            <summary>Applies all the weapon's warheads to the target.</summary>
+        </member>
+        <member name="M:OpenRA.GameRules.WeaponInfo.Impact(OpenRA.Traits.Target@,OpenRA.Actor)">
+            <summary>Applies all the weapon's warheads to the target. Only use for projectile-less, special-case impacts.</summary>
+        </member>
+        <member name="P:OpenRA.Graphics.IModel.AggregateBounds">
+            <summary>Returns the smallest rectangle that covers all rotations of all frames in a model.</summary>
+        </member>
+        <member name="M:OpenRA.Graphics.RgbaColorRenderer.IntersectionOf(OpenRA.float3@,OpenRA.float3@,OpenRA.float3@,OpenRA.float3@)">
+            <summary>
+            Calculate the 2D intersection of two lines.
+            Will behave badly if the lines are parallel.
+            Z position is the average of a and b (ignores actual intersection point if it exists).
+            </summary>
+        </member>
+        <member name="T:OpenRA.Graphics.SpriteFrameType">
+            <summary>
+            Describes the format of the pixel data in a ISpriteFrame.
+            Note that the channel order is defined for little-endian bytes, so BGRA corresponds
+            to a 32bit ARGB value, such as that returned by Color.ToArgb().
+            </summary>
+        </member>
+        <member name="F:OpenRA.Graphics.SpriteFrameType.Indexed8">
+            <summary>
+            8 bit index into an external palette.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Graphics.SpriteFrameType.Bgra32">
+            <summary>
+            32 bit color such as returned by Color.ToArgb() or the bmp file format
+            (remember that little-endian systems place the little bits in the first byte).
+            </summary>
+        </member>
+        <member name="F:OpenRA.Graphics.SpriteFrameType.Bgr24">
+            <summary>
+            Like BGRA, but without an alpha channel.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Graphics.SpriteFrameType.Rgba32">
+            <summary>
+            32 bit color in big-endian format, like png.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Graphics.SpriteFrameType.Rgb24">
+            <summary>
+            Like RGBA, but without an alpha channel.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Graphics.ISpriteFrame.Size">
+            <summary>
+            Size of the frame's `Data`.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Graphics.ISpriteFrame.FrameSize">
+            <summary>
+            Size of the entire frame including the frame's `Size`.
+            Think of this like a picture frame.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Graphics.Util.RotateQuad(OpenRA.float3,OpenRA.float3,System.Single)">
+            <summary>Rotates a quad about its center in the x-y plane.</summary>
+            <param name="tl">The top left vertex of the quad.</param>
+            <param name="size">A float3 containing the X, Y, and Z lengths of the quad.</param>
+            <param name="rotation">The number of radians to rotate by.</param>
+            <returns>An array of four vertices representing the rotated quad (top-left, top-right, bottom-right, bottom-left).</returns>
+        </member>
+        <member name="M:OpenRA.Graphics.Util.BoundingRectangle(OpenRA.float3,OpenRA.float3,System.Single)">
+            <summary>
+            Returns the bounds of an object. Used for determining which objects need to be rendered on screen, and which do not.
+            </summary>
+            <param name="offset">The top left vertex of the object.</param>
+            <param name="size">A float 3 containing the X, Y, and Z lengths of the object.</param>
+            <param name="rotation">The angle to rotate the object by (use 0f if there is no rotation).</param>
+        </member>
+        <member name="M:OpenRA.Graphics.Viewport.CandidateMouseoverCells(OpenRA.int2)">
+            <summary>Returns an unfiltered list of all cells that could potentially contain the mouse cursor.</summary>
+        </member>
+        <member name="M:OpenRA.Graphics.WorldRenderer.ProjectedPosition(OpenRA.int2)">
+            <summary>
+            Returns a position in the world that is projected to the given screen position.
+            There are many possible world positions, and the returned value chooses the value with no elevation.
+            </summary>
+        </member>
+        <member name="M:OpenRA.IVertexBuffer`1.SetData(`0[]@,System.Int32)">
+            <summary>
+            Upon return `vertices` may reference another array object of at least the same size - containing random values.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Video.IVideo.CurrentFrameData">
+            <summary>
+            Current frame color data in 32-bit BGRA.
+            </summary>
+        </member>
+        <member name="T:OpenRA.HotkeyReference">
+            <summary>
+            A reference to either a named hotkey (defined in the game settings) or a statically assigned hotkey.
+            </summary>
+        </member>
+        <member name="M:OpenRA.InstalledMods.#ctor(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+            <summary>Initializes the collection of locally installed mods.</summary>
+            <param name="searchPaths">Filesystem paths to search for mod packages.</param>
+            <param name="explicitPaths">Filesystem paths to additional mod packages.</param>
+        </member>
+        <member name="P:OpenRA.IUtilityCommand.Name">
+            <summary>
+            The string used to invoke the command.
+            </summary>
+        </member>
+        <member name="T:OpenRA.Manifest">
+            <summary>Describes what is to be loaded in order to run a mod.</summary>
+        </member>
+        <member name="M:OpenRA.Manifest.Get``1">
+            <summary>Load a cached IGlobalModData instance.</summary>
+        </member>
+        <member name="M:OpenRA.Manifest.Get``1(OpenRA.ObjectCreator)">
+            <summary>
+            Load an uncached IGlobalModData instance directly from the manifest yaml.
+            This should only be used by external mods that want to query data from this mod.
+            </summary>
+        </member>
+        <member name="P:OpenRA.CellLayer`1.Item(OpenRA.CPos)">
+            <summary>Gets or sets the <see cref="T:OpenRA.CellLayer"/> using cell coordinates.</summary>
+        </member>
+        <member name="P:OpenRA.CellLayer`1.Item(OpenRA.MPos)">
+            <summary>Gets or sets the layer contents using raw map coordinates (not CPos!).</summary>
+        </member>
+        <member name="M:OpenRA.CellLayer.Resize``1(OpenRA.CellLayer{``0},OpenRA.Primitives.Size,``0)">
+            <summary>Create a new layer by resizing another layer. New cells are filled with defaultValue.</summary>
+        </member>
+        <member name="M:OpenRA.CellLayerBase`1.Clear">
+            <summary>Clears the layer contents with their default value.</summary>
+        </member>
+        <member name="M:OpenRA.CellLayerBase`1.Clear(`0)">
+            <summary>Clears the layer contents with a known value.</summary>
+        </member>
+        <member name="M:OpenRA.CellRegion.Expand(OpenRA.CellRegion,System.Int32)">
+            <summary>Expand the specified region with an additional cordon. This may expand the region outside the map borders.</summary>
+        </member>
+        <member name="M:OpenRA.CellRegion.BoundingRegion(OpenRA.MapGridType,System.Collections.Generic.IReadOnlyCollection{OpenRA.CPos})">
+            <summary>Returns the minimal region that covers at least the specified cells.</summary>
+        </member>
+        <member name="F:OpenRA.Map.YamlFields">
+            <summary>Defines the order of the fields in map.yaml.</summary>
+        </member>
+        <member name="P:OpenRA.Map.GeoTransform">
+            <summary>
+            Parsed GeoTransform metadata for converting between map cells and lat/lon.
+            Null if the map.yaml does not contain a Metadata.GeoTransform block.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Map.ProjectedTopLeft">
+            <summary>
+            The top-left of the playable area in projected world coordinates
+            This is a hacky workaround for legacy functionality.  Do not use for new code.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Map.ProjectedBottomRight">
+            <summary>
+            The bottom-right of the playable area in projected world coordinates
+            This is a hacky workaround for legacy functionality.  Do not use for new code.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Map.#ctor(OpenRA.ModData,OpenRA.ITerrainInfo,OpenRA.Primitives.Size)">
+            <summary>
+            Initializes a new map created by the editor or importer.
+            The map will not receive a valid UID until after it has been saved and reloaded.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Map.CellHeightStep">
+            <summary>
+            The size of the map Height step in world units.
+            </summary>
+            RectangularIsometric defines 1024 units along the diagonal axis,
+            giving a half-tile height step of sqrt(2) * 512
+        </member>
+        <member name="M:OpenRA.Map.ParseGeoTransformFromMetadata">
+            <summary>
+            Parse the optional GeoTransform subtree from the <c>Metadata</c> block.
+            Returns null if not present or invalid.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Map.TryCellToLatLon(OpenRA.CPos,System.Double@,System.Double@)">
+            <summary>
+            Convert a map cell center to latitude/longitude.
+            Returns false if GeoTransform is unavailable or the cell is out of bounds.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Map.TryLatLonToCell(System.Double,System.Double,OpenRA.CPos@)">
+            <summary>
+            Convert latitude/longitude to the containing cell (floor). Returns false if outside the map
+            or GeoTransform is unavailable.
+            </summary>
+        </member>
+        <member name="P:OpenRA.MapCache.LastModifiedMap">
+            <summary>
+            The most recently modified or loaded map at runtime.
+            </summary>
+        </member>
+        <member name="M:OpenRA.MapCache.PickLastModifiedMap(OpenRA.MapVisibility)">
+            <summary>
+            If LastModifiedMap was picked already, returns a null.
+            </summary>
+        </member>
+        <member name="T:OpenRA.MapPreview.InnerData">
+            <summary>Wrapper that enables map data to be replaced in an atomic fashion.</summary>
+        </member>
+        <member name="M:OpenRA.MapPreview.GetMessage(System.String,System.Object[])">
+            <summary>
+            Functionality mirrors <see cref="M:OpenRA.FluentProvider.GetMessage(System.String,System.Object[])"/>, except instead of using
+            loaded <see cref="T:OpenRA.Map"/>'s fluent bundle as backup, we use this <see cref="T:OpenRA.MapPreview"/>'s.
+            </summary>
+        </member>
+        <member name="M:OpenRA.MapPreview.TryGetMessage(System.String,System.String@,System.Object[])">
+            <summary>
+            Functionality mirrors <see cref="M:OpenRA.FluentProvider.TryGetMessage(System.String,System.String@,System.Object[])"/>, except instead of using
+            loaded <see cref="T:OpenRA.Map"/>'s fluent bundle as backup, we use this <see cref="T:OpenRA.MapPreview"/>'s.
+            </summary>
+        </member>
+        <member name="M:OpenRA.MapPreview.UpdateFromMapWithoutOwningPackage(OpenRA.FileSystem.IReadOnlyPackage,OpenRA.FileSystem.IReadOnlyPackage,OpenRA.MapClassification,System.Nullable{OpenRA.MapGridType},OpenRA.MiniYamlNode[][])">
+            <summary>
+            Updates internal state from a map without taking ownership of its package.
+            A new copy of the map package will be opened lazily when needed.
+            </summary>
+        </member>
+        <member name="M:OpenRA.MapPreview.UpdateFromMap(OpenRA.FileSystem.IReadOnlyPackage,OpenRA.MapClassification,System.Nullable{OpenRA.MapGridType},OpenRA.MiniYamlNode[][])">
+            <summary>
+            Updates internal state from a map and takes ownership of its package.
+            The package remains in memory and must not be disposed.
+            </summary>
+        </member>
+        <member name="F:OpenRA.PlayerReference.HomeLocation">
+            <summary>
+            Sets the "Home" location, which can be used by traits and scripts to e.g. set the initial camera
+            location or choose the map edge for reinforcements.
+            This will usually be overridden for client (lobby slot) players with a location based on the Spawn index.
+            </summary>
+        </member>
+        <member name="F:OpenRA.PlayerReference.Spawn">
+            <summary>
+            Sets the initial spawn point index that is used to override the "Home" location for client (lobby slot) players.
+            Map players always ignore this and use HomeLocation directly.
+            </summary>
+        </member>
+        <member name="P:OpenRA.ProjectedCellLayer`1.Item(OpenRA.PPos)">
+            <summary>Gets or sets the layer contents using projected map coordinates.</summary>
+        </member>
+        <member name="P:OpenRA.ProjectedCellRegion.CandidateMapCoords">
+            <summary>
+            The region in map coordinates that contains all the cells that
+            may be projected inside this region.  For increased performance,
+            this does not validate whether individual map cells are actually
+            projected inside the region.
+            </summary>
+        </member>
+        <member name="M:OpenRA.MiniYaml.MergeSelfPartial(System.Collections.Generic.IReadOnlyCollection{OpenRA.MiniYamlNode})">
+            <summary>
+            Merges any duplicate keys that are defined within the same set of nodes.
+            Does not resolve inheritance or node removals.
+            </summary>
+        </member>
+        <member name="M:OpenRA.ILoadScreen.Init(OpenRA.ModData,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>Initializes the loadscreen with yaml data from the LoadScreen block in mod.yaml.</summary>
+        </member>
+        <member name="M:OpenRA.ILoadScreen.Display">
+            <summary>Called at arbitrary times during mod load to rerender the loadscreen.</summary>
+        </member>
+        <member name="M:OpenRA.ILoadScreen.BeforeLoad">
+            <summary>
+            Called before loading the mod assets.
+            Returns false if mod loading should be aborted (e.g. switching to another mod instead).
+            </summary>
+        </member>
+        <member name="M:OpenRA.ILoadScreen.StartGame(OpenRA.Arguments)">
+            <summary>Called when the engine expects to connect to a server/replay or load the shellmap.</summary>
+        </member>
+        <member name="T:OpenRA.PPos">
+            <summary>
+            Projected map position.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Id">
+            <summary>Online game number or -1 for LAN games.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Name">
+            <summary>Name of the server.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Address">
+            <summary>ip:port string to connect to.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Port">
+            <summary>Port of the server.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.State">
+            <summary>The current state of the server (waiting/playing/completed).</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.MaxPlayers">
+            <summary>The number of slots available for non-bot players.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Map">
+            <summary>UID of the map.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Mod">
+            <summary>Mod ID.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Version">
+            <summary>Mod Version.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.ModTitle">
+            <summary>Human-readable mod title.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.ModWebsite">
+            <summary>URL to show in game listings for custom/unknown mods.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.ModIcon32">
+            <summary>URL to a 32x32 px icon for the mod.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Location">
+            <summary>GeoIP resolved server location.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Protected">
+            <summary>Password protected.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Authentication">
+            <summary>Players must be authenticated with the OpenRA forum.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Started">
+            <summary>UTC datetime string when the game changed to the Playing state.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Players">
+            <summary>Number of non-spectator, non-bot players. Only defined if GameServer is parsed from yaml.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Bots">
+            <summary>Number of bot players. Only defined if GameServer is parsed from yaml.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.Spectators">
+            <summary>Number of spectators. Only defined if GameServer is parsed from yaml.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.PlayTime">
+            <summary>Number of seconds that the game has been in the Playing state. Only defined if GameServer is parsed from yaml.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.IsCompatible">
+            <summary>Can we join this server (after switching mods if required)? Only defined if GameServer is parsed from yaml.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.IsJoinable">
+            <summary>Can we join this server (after switching mods if required)? Only defined if GameServer is parsed from yaml.</summary>
+        </member>
+        <member name="F:OpenRA.Network.GameServer.DisabledSpawnPoints">
+            <summary>The list of spawnpoints that are disabled for this game.</summary>
+        </member>
+        <member name="P:OpenRA.Network.OrderManager.LocalClient">
+            <summary>Null when watching a replay.</summary>
+        </member>
+        <member name="P:OpenRA.Network.OrderManager.IsOutOfSync">
+            <summary>
+            Indicates if the world state of other players or a replay has diverged from the local state.
+            The game cannot reliably continue in this condition and is unusable.
+            </summary>
+            <remarks>Should only be set in <see cref="M:OpenRA.Network.OrderManager.OutOfSync(System.Int32)"/>.</remarks>
+        </member>
+        <member name="T:OpenRA.Network.SyncReport.Values">
+            <summary>
+            Holds up to 4 objects directly, or else allocates an array to hold the items. This allows us to record
+            trait values for traits with up to 4 sync members inline without having to allocate extra memory.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Platform.SupportDir">
+            <summary>
+            Directory containing user-specific support files (settings, maps, replays, game data, etc).
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platform.OverrideSupportDir(System.String)">
+            <summary>
+            Specify a custom support directory that already exists on the filesystem.
+            Cannot be called after Platform.SupportDir / GetSupportDir have been accessed.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platform.OverrideEngineDir(System.String)">
+            <summary>
+            Specify a custom engine directory that already exists on the filesystem.
+            Cannot be called after Platform.EngineDir has been accessed.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platform.ResolvePath(System.String)">
+            <summary>Replaces special character prefixes with full paths.</summary>
+        </member>
+        <member name="P:OpenRA.Player.Color">
+            <summary>Returns player color with relationship colors applied.</summary>
+        </member>
+        <member name="F:OpenRA.Player.DisplayFaction">
+            <summary>The faction (including Random, etc.) that was selected in the lobby.</summary>
+        </member>
+        <member name="F:OpenRA.Player.SpawnPoint">
+            <summary>The spawn point index that was assigned for client-based players.</summary>
+        </member>
+        <member name="F:OpenRA.Player.DisplaySpawnPoint">
+            <summary>The spawn point index (including 0 for Random) that was selected in the lobby for client-based players.</summary>
+        </member>
+        <member name="P:OpenRA.Player.ResolvedPlayerName">
+            <summary>The chosen player name including localized and enumerated bot names.</summary>
+        </member>
+        <member name="M:OpenRA.Player.IsAlliedWith(OpenRA.Player)">
+            <summary>Returns true if player is null.</summary>
+        </member>
+        <member name="M:OpenRA.Player.GetColor(OpenRA.Player)">
+            <summary>Returns <see cref="F:OpenRA.Player.color"/>, ignoring player relationship colors.</summary>
+        </member>
+        <member name="T:OpenRA.Primitives.ActionQueue">
+            <summary>
+            A thread-safe action queue, suitable for passing units of work between threads.
+            </summary>
+        </member>
+        <member name="T:OpenRA.Primitives.PlayerDictionary`1">
+            <summary>
+            Provides a mapping of players to values, as well as fast lookup by player index.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Primitives.PlayerDictionary`1.Item(OpenRA.Player)">
+            <summary>Gets the value for the specified player. This is slower than specifying a player index.</summary>
+        </member>
+        <member name="P:OpenRA.Primitives.PlayerDictionary`1.Item(System.Int32)">
+            <summary>Gets the value for the specified player index.</summary>
+        </member>
+        <member name="T:OpenRA.Primitives.PriorityArray`1">
+            <summary>
+            A random-access array which keeps track of the minimum item.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Primitives.PriorityArray`1.#ctor(System.Int32,`0)">
+            <summary>
+            Create a new PriorityArray of given size with all values preset to the given init value.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Primitives.PriorityArray`1.GetMinIndex">
+            <summary>Get the index of the minimum element.</summary>
+        </member>
+        <member name="T:OpenRA.Primitives.PriorityQueue`2">
+            <summary>
+            Represents a collection of items that have a priority.
+            On pop, the item with the lowest priority value is removed.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Primitives.PriorityQueue`2.comparer">
+            <summary>
+            Compares two items to determine their priority.
+            PERF: Using a struct allows the calls to be devirtualized.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Primitives.PriorityQueue`2.items">
+            <summary>
+            A <a href="https://en.wikipedia.org/wiki/Binary_heap">binary min-heap</a> storing the items.
+            An array divided into sub arrays called levels. At each level the size of a level array doubles.
+            Elements at deeper levels always have higher priority values than elements nearer to the root.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Primitives.PriorityQueue`2.level">
+            <summary>
+            Index of deepest level.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Primitives.PriorityQueue`2.index">
+            <summary>
+            Number of elements in the deepest level.
+            </summary>
+        </member>
+        <member name="T:OpenRA.Primitives.ReadOnlyAdapterStream">
+            <summary>
+            Provides a read-only buffering layer so data can be streamed from sources where reading arbitrary amounts of
+            data is difficult.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Primitives.ReadOnlyAdapterStream.BufferData(System.IO.Stream,System.Collections.Generic.Queue{System.Byte})">
+            <summary>
+            Reads data into a buffer, which will be used to satisfy <see cref="M:OpenRA.Primitives.ReadOnlyAdapterStream.ReadByte"/>,
+            <see cref="M:OpenRA.Primitives.ReadOnlyAdapterStream.Read(System.Byte[],System.Int32,System.Int32)"/> and <see cref="M:OpenRA.Primitives.ReadOnlyAdapterStream.Read(System.Span{System.Byte})"/> calls.
+            </summary>
+            <param name="baseStream">The source stream from which bytes should be read.</param>
+            <param name="data">The queue where bytes should be enqueued. Do not dequeue from this buffer.</param>
+            <returns>Return true if all data has been read; otherwise, false.</returns>
+        </member>
+        <member name="T:OpenRA.Primitives.RingBuffer`1">
+            <summary>Fixed size rotating buffer backed by an array.</summary>
+        </member>
+        <member name="M:OpenRA.Primitives.SegmentStream.#ctor(System.IO.Stream,System.Int64,System.Int64)">
+            <summary>
+            Creates a new <see cref="T:OpenRA.Primitives.SegmentStream"/> that wraps a subset of the source stream. This takes ownership of
+            the source stream. The <see cref="T:OpenRA.Primitives.SegmentStream"/> is dependent on the source and changes its underlying
+            position.
+            </summary>
+            <param name="stream">The source stream, of which only a segment should be exposed. Ownership is transferred
+            to the <see cref="T:OpenRA.Primitives.SegmentStream"/>.</param>
+            <param name="offset">The offset at which the segment starts.</param>
+            <param name="count">The length of the segment.</param>
+        </member>
+        <member name="M:OpenRA.Primitives.SegmentStream.CreateWithoutOwningStream(System.IO.Stream,System.Int64,System.Int32)">
+            <summary>
+            Creates a new <see cref="T:System.IO.Stream"/> that wraps a subset of the source stream without taking ownership of it,
+            allowing it to be reused by the caller. The <see cref="T:System.IO.Stream"/> is independent of the source stream and
+            won't affect its position.
+            </summary>
+            <param name="stream">The source stream, of which only a segment should be exposed. Ownership is retained by
+            the caller.</param>
+            <param name="offset">The offset at which the segment starts.</param>
+            <param name="count">The length of the segment.</param>
+        </member>
+        <member name="M:OpenRA.Renderer.WorldBufferSnapshot">
+            <summary>
+            Copies and returns the currently rendered world state as a temporary texture.
+            </summary>
+        </member>
+        <member name="T:OpenRA.Scripting.ScriptGlobal">
+            <summary>
+            Provides global bindings in Lua code.
+            </summary>
+            <remarks>
+            <para>
+            Instance methods and properties declared in derived classes will be made available in Lua. Use
+            <see cref="T:OpenRA.Scripting.ScriptGlobalAttribute"/> on your derived class to specify the name exposed in Lua. It is recommended
+            to apply <see cref="T:OpenRA.DescAttribute"/> against each method or property to provide a description of what it does.
+            </para>
+            <para>
+            Any parameters to your method that are <see cref="T:Eluant.LuaValue"/>s will be disposed automatically when your method
+            completes. If you need to return any of these values, or need them to live longer than your method, you must
+            use <see cref="M:Eluant.LuaValue.CopyReference"/> to get your own copy of the value. Any copied values you return will
+            be disposed automatically, but you assume responsibility for disposing any other copies.
+            </para>
+            </remarks>
+        </member>
+        <member name="T:OpenRA.Traits.DamageType">
+            <summary>
+            Type tag for DamageTypes <see cref="T:OpenRA.Primitives.BitSet`1"/>.
+            </summary>
+        </member>
+        <member name="P:OpenRA.Traits.IStoresResources.Capacity">
+            <summary>The amount of resources that can be stored.</summary>
+        </member>
+        <member name="P:OpenRA.Traits.IStoresResources.Contents">
+            <summary>Stored resources.</summary>
+            <remarks>Dictionary key refers to resourceType, value refers to resource amount.</remarks>
+        </member>
+        <member name="P:OpenRA.Traits.IStoresResources.ContentsSum">
+            <summary>A performance cheap method of getting the total sum of contents.</summary>
+        </member>
+        <member name="M:OpenRA.Traits.IStoresResources.AddResource(System.String,System.Int32)">
+            <summary>Returns the amount of <paramref name="value"/> that was not added.</summary>
+        </member>
+        <member name="M:OpenRA.Traits.IStoresResources.RemoveResource(System.String,System.Int32)">
+            <summary>Returns the amount of <paramref name="value"/> that was not removed.</summary>
+        </member>
+        <member name="T:OpenRA.Traits.TargetableType">
+            <summary>
+            Indicates target types as defined on <see cref="T:OpenRA.Traits.ITargetable"/> are present in a <see cref="T:OpenRA.Primitives.BitSet`1"/>.
+            </summary>
+        </member>
+        <member name="M:OpenRA.StreamExts.ReadAllLinesAsMemory(System.IO.Stream)">
+            <summary>
+            Streams each line of characters from a stream, exposing the line as <see cref="T:System.ReadOnlyMemory`1"/>.
+            The memory lifetime is only valid during that iteration. Advancing the iteration invalidates the memory.
+            Consumers should call <see cref="P:System.ReadOnlyMemory`1.Span"/> on each line and otherwise avoid operating on
+            the memory to ensure they meet the lifetime restrictions.
+            </summary>
+        </member>
+        <member name="M:OpenRA.StreamExts.ReadLengthPrefixedString(System.IO.Stream,System.Text.Encoding,System.Int32)">
+            <summary>
+            The string is assumed to be length-prefixed, as written by <see cref="M:OpenRA.StreamExts.WriteLengthPrefixedString(System.IO.Stream,System.Text.Encoding,System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:OpenRA.StreamExts.WriteLengthPrefixedString(System.IO.Stream,System.Text.Encoding,System.String)">
+            <summary>
+            Writes a length-prefixed string using the specified encoding and returns the number of bytes written.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.MersenneTwister.NextUint">
+            <summary>
+            Produces a random unsigned 32-bit integer.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.MersenneTwister.NextUlong">
+            <summary>
+            Produces a random unsigned 64-bit integer.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.MersenneTwister.Next">
+            <summary>
+            Produces signed integers between -0x7fffffff and 0x7fffffff inclusive.
+            0 is twice as likely as any other number.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.MersenneTwister.NextFloat">
+            <summary>
+            Produces random 32-bit floats between 0 inclusive and 1 inclusive.
+            Note that whilst floats are 32-bit (23-bit mantissa), the entropy is not. Lower numbers preserve more entropy.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.MersenneTwister.PickWeighted(System.Collections.Generic.IReadOnlyList{System.Int32})">
+            <summary>
+            Pick a random index from a list of weights.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.MersenneTwister.ShuffleInPlace``1(System.Collections.Generic.IList{``0},System.Int32,System.Int32)">
+            <summary>
+            Shuffle a portion of a list in place. Has minor biases.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Support.PerfTickLogger.GetTimestamp">
+            <summary>Retrieve the current timestamp.</summary>
+            <returns>TimestampDisabled if performance logging is disabled.</returns>
+        </member>
+        <member name="M:OpenRA.Support.PerfTickLogger.LogLongTick(System.Int64,System.String,System.Object)">
+            <summary>Logs an entry in the performance log when the current time since the start tick exceeds the game debug setting `LongTickThresholdMs`.</summary>
+            <returns>TimestampDisabled if performance logging is disabled.</returns>
+        </member>
+        <member name="T:OpenRA.TraitDictionary">
+            <summary>
+            Provides efficient ways to query a set of actors by their traits.
+            </summary>
+        </member>
+        <member name="T:OpenRA.WAngle">
+            <summary>
+            1D angle - 1024 units = 360 degrees.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WAngle.ClosestCosineIndex(System.Int32)">
+            <summary>
+            Find the index of CosineTable that has the value closest to the given value.
+            The first or last index will be returned for values above or below the valid range.
+            </summary>
+        </member>
+        <member name="T:OpenRA.WDist">
+            <summary>
+            1d world distance - 1024 units = 1 cell.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Widgets.Ui.HandleKeyPress(OpenRA.KeyInput)">
+            <summary>Possibly handle keyboard input (if this widget has keyboard focus).</summary>
+            <returns><c>true</c>, if keyboard input was handled, <c>false</c> if the input should bubble to the parent widget.</returns>
+            <param name="e">Key input data.</param>
+        </member>
+        <member name="M:OpenRA.Widgets.Widget.HandleMouseInput(OpenRA.MouseInput)">
+            <summary>Possibly handles mouse input (click, drag, scroll, etc).</summary>
+            <returns><c>true</c>, if mouse input was handled, <c>false</c> if the input should bubble to the parent widget.</returns>
+            <param name="mi">Mouse input data.</param>
+        </member>
+        <member name="P:OpenRA.World.IsGameOver">
+            <summary>Indicates that the game has ended.</summary>
+            <remarks>Should only be set in <see cref="M:OpenRA.World.EndGame"/>.</remarks>
+        </member>
+        <member name="M:OpenRA.WorldUtils.ClosestToIgnoringPath(System.Collections.Generic.IEnumerable{OpenRA.Actor},OpenRA.Actor)">
+            <summary>
+            From the given <paramref name="actors"/>, select the one nearest the given <paramref name="actor"/> by
+            comparing their <see cref="P:OpenRA.Actor.CenterPosition"/>. No check is done to see if a path exists.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WorldUtils.ClosestToIgnoringPath(System.Collections.Generic.IEnumerable{OpenRA.Actor},OpenRA.WPos)">
+            <summary>
+            From the given <paramref name="actors"/>, select the one nearest the given <paramref name="position"/> by
+            comparing the <see cref="P:OpenRA.Actor.CenterPosition"/>. No check is done to see if a path exists.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WorldUtils.ClosestToIgnoringPath``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,OpenRA.Actor},OpenRA.Actor)">
+            <summary>
+            From the given <paramref name="items"/> that can be projected to <see cref="T:OpenRA.Actor"/>,
+            select the one nearest the given <paramref name="actor"/> by
+            comparing their <see cref="P:OpenRA.Actor.CenterPosition"/>. No check is done to see if a path exists.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WorldUtils.ClosestToIgnoringPath``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,OpenRA.Actor},OpenRA.WPos)">
+            <summary>
+            From the given <paramref name="items"/> that can be projected to <see cref="T:OpenRA.Actor"/>,
+            select the one nearest the given <paramref name="position"/> by
+            comparing the <see cref="P:OpenRA.Actor.CenterPosition"/>. No check is done to see if a path exists.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WorldUtils.ClosestToIgnoringPath(System.Collections.Generic.IEnumerable{OpenRA.WPos},OpenRA.WPos)">
+            <summary>
+            From the given <paramref name="positions"/>, select the one nearest the given <paramref name="position"/>.
+            No check is done to see if a path exists, as an actor is required for that.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WPos.Lerp(OpenRA.WPos@,OpenRA.WPos@,System.Int32,System.Int32)">
+            <summary>
+            Returns the linear interpolation between points 'a' and 'b'.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WPos.Lerp(OpenRA.WPos@,OpenRA.WPos@,System.Int64,System.Int64)">
+            <summary>
+            Returns the linear interpolation between points 'a' and 'b'.
+            </summary>
+        </member>
+        <member name="T:OpenRA.WRot">
+            <summary>
+            3d World rotation.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WRot.#ctor(OpenRA.WAngle,OpenRA.WAngle,OpenRA.WAngle)">
+            <summary>
+            Construct a rotation from Euler angles.
+            </summary>
+        </member>
+        <member name="M:OpenRA.WRot.#ctor(OpenRA.WVec,OpenRA.WAngle)">
+            <summary>
+            Construct a rotation from an axis and angle.
+            The axis is expected to be normalized to length 1024.
+            </summary>
+        </member>
+    </members>
+</doc>

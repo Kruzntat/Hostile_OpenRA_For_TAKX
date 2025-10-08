@@ -1,0 +1,5 @@
+mgrs>=1.4.5
+utm>=0.7.0
+packaging>=23.0
+requests>=2.31.0
+cd 
