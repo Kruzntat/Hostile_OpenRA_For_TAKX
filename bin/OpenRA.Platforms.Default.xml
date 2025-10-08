@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>OpenRA.Platforms.Default</name>
+    </assembly>
+    <members>
+        <member name="T:OpenRA.Platforms.Default.ThreadedGraphicsContext">
+            <summary>
+            Creates a dedicated thread for the graphics device. An internal message queue is used to perform actions on the
+            device. This allows calls to be enqueued to be processed asynchronously and thus free up the calling thread.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platforms.Default.ThreadedGraphicsContext.Send``1(System.Func{``0})">
+            <summary>
+            Sends a message to the rendering thread.
+            This method blocks until the message is processed, and returns the result.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platforms.Default.ThreadedGraphicsContext.Send``1(System.Func{System.Object,``0},System.Object)">
+            <summary>
+            Sends a message to the rendering thread.
+            This method blocks until the message is processed, and returns the result.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platforms.Default.ThreadedGraphicsContext.Post(System.Action)">
+            <summary>
+            Posts a message to the rendering thread.
+            This method then returns immediately and does not wait for the message to be processed.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platforms.Default.ThreadedGraphicsContext.Post(System.Action{System.Object},System.Object)">
+            <summary>
+            Posts a message to the rendering thread.
+            This method then returns immediately and does not wait for the message to be processed.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Platforms.Default.ThreadedVertexBuffer`1.SetData(`0[]@,System.Int32)">
+            <summary>
+            PERF: The vertices array is passed without copying to the render thread. Upon return `vertices` may reference another
+            array object of at least the same size - containing random values.
+            </summary>
+        </member>
+    </members>
+</doc>

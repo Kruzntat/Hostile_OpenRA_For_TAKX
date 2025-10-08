@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>OpenRA.Test</name>
+    </assembly>
+    <members>
+        <member name="M:OpenRA.Test.Sha1Tests.Sha1HexConvert(System.String,System.String)">
+            <summary>
+            https://en.wikipedia.org/wiki/SHA-1#Examples_and_pseudocode.
+            </summary>
+            <param name="input">The input string.</param>
+            <param name="expected">The expected hex string of the SHA1.</param>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>OpenRA.Mods.Cnc</name>
+    </assembly>
+    <members>
+        <member name="T:OpenRA.Mods.Cnc.FileFormats.CRC32">
+            <summary>
+            Static class that uses a lookup table to calculates CRC32
+            checksums of input strings.
+            </summary>
+        </member>
+        <member name="F:OpenRA.Mods.Cnc.FileFormats.CRC32.LookUp">
+            <summary>
+            The CRC32 lookup table.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Mods.Cnc.FileFormats.CRC32.Calculate(System.ReadOnlySpan{System.Byte},System.UInt32)">
+            <summary>
+            A CRC32 implementation that can be used on spans of bytes.
+            </summary>
+            <param name="data">The data from which to calculate the checksum.</param>
+            <param name="polynomial">The polynomial to XOR with.</param>
+            <returns>
+            The calculated checksum.
+            </returns>
+        </member>
+        <member name="M:OpenRA.Mods.Cnc.FileFormats.CRC32.Calculate(System.ReadOnlySpan{System.Byte})">
+            <summary>
+            A CRC32 implementation that can be used on spans of bytes, with default polynomial.
+            </summary>
+            <param name="data">The data from which to calculate the checksum.</param>
+            <returns>
+            The calculated checksum.
+            </returns>
+        </member>
+        <member name="T:OpenRA.Mods.Cnc.FileSystem.MegV3Loader">
+            <summary>
+            This class supports loading unencrypted V3 .meg files using
+            reference documentation from here https://modtools.petrolution.net/docs/MegFileFormat.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Mods.Cnc.Util.ClassicIndexFacing(OpenRA.WAngle,System.Int32)">
+            <summary>
+            Calculate the frame index (between 0..numFrames) that
+            should be used for the given facing value, accounting
+            for the non-linear facing mapping for sprites with 32 directions.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Mods.Cnc.Util.ClassicQuantizeFacing(OpenRA.WAngle,System.Int32)">
+            <summary>
+            Rounds the given facing value to the nearest quantized step,
+            accounting for the non-linear facing mapping for sprites with 32 directions.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Mods.Cnc.UtilityCommands.ImportGen2MapCommand.ToMPos(System.Int32,System.Int32)">
+            <summary>
+            Convert TS relative position to OpenRA MPos, accounting for map cordons.
+            </summary>
+        </member>
+        <member name="M:OpenRA.Mods.Cnc.UtilityCommands.ImportGen2MapCommand.ToMPos(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Convert TS relative position to OpenRA MPos, accounting for map cordons.
+            </summary>
+        </member>
+    </members>
+</doc>

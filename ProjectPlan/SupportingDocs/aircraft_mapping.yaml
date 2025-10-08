@@ -1,0 +1,100 @@
+# Aircraft mapping skeleton for RA mod (J6-M0)
+# Keys: actor names from OpenRA/mods/ra/rules/aircraft.yaml
+# Values: CoT type and 2525C milsym IDs for states
+# Placeholders are provided and should be reviewed/updated by QA.
+
+version: 1
+notes:
+  - "Roles provide defaults for type and milsym; actor entries can override as needed."
+  - "These are placeholder 2525C IDs consistent with Journey6 examples."
+  - "Neutral/scripted aircraft (e.g., BADR, U2) are included to cover all spawns."
+
+roles:
+  FixedWing:
+    type: "a-f-A-M-F-F"
+    milsymAlive: "SFACMFF---*-***"
+    milsymDamaged: "SFADMFF---*-***"
+    milsymDestroyed: "SFAXMFF---*-***"
+  RotaryWing:
+    type: "a-f-A-M-H"
+    milsymAlive: "SFACMH----*-***"
+    milsymDamaged: "SFADMH----*-***"
+    milsymDestroyed: "SFAXMH----*-***"
+  UAV:
+    type: "a-f-A-M-F-Q-R-W"
+    milsymAlive: "SFACMFQRW-*-***"
+    milsymDamaged: "SFADMFQRW-*-***"
+    milsymDestroyed: "SFAXMFQRW-*-***"
+
+actors:
+  MIG:
+    role: FixedWing
+    type: "a-f-A-M-F-F"
+    milsymAlive: "SFACMFF---*-***"
+    milsymDamaged: "SFADMFF---*-***"
+    milsymDestroyed: "SFAXMFF---*-***"
+    notes: ["Buildable jet", "Soviet"]
+
+  YAK:
+    role: FixedWing
+    type: "a-f-A-M-F-P"
+    milsymAlive: "SFACMFP---*-***"
+    milsymDamaged: "SFADMFP---*-***"
+    milsymDestroyed: "SFAXMFP---*-***"
+    notes: ["Buildable jet", "Soviet"]
+
+  HELI:
+    role: RotaryWing
+    type: "a-f-A-M-H"
+    milsymAlive: "SFACMH----*-***"
+    milsymDamaged: "SFADMH----*-***"
+    milsymDestroyed: "SFAXMH----*-***"
+    notes: ["Buildable attack helo", "Allied"]
+
+  HIND:
+    role: RotaryWing
+    type: "a-f-A-M-H"
+    milsymAlive: "SFACMH----*-***"
+    milsymDamaged: "SFADMH----*-***"
+    milsymDestroyed: "SFAXMH----*-***"
+    notes: ["Buildable/disabled by rules", "Soviet"]
+
+  TRAN:
+    role: RotaryWing
+    type: "a-f-A-M-H"
+    milsymAlive: "SFACMH----*-***"
+    milsymDamaged: "SFADMH----*-***"
+    milsymDestroyed: "SFAXMH----*-***"
+    notes: ["Buildable transport helo"]
+
+  MH60:
+    role: RotaryWing
+    type: "a-f-A-M-H-H"
+    milsymAlive: "SFACMHH---*-***"
+    milsymDamaged: "SFADMHH---*-***"
+    milsymDestroyed: "SFAXMHH---*-***"
+    notes: ["Buildable attack helo", "Allied"]
+
+  BADR:
+    role: FixedWing
+    type: "a-f-A-M-F-C-H"
+    milsymAlive: "SFACMFCH--*-***"
+    milsymDamaged: "SFADMFC---*-***"
+    milsymDestroyed: "SFAXMFC---*-***"
+    notes: ["Neutral/scripted paradrop plane"]
+
+  BADR.Bomber:
+    role: FixedWing
+    type: "a-f-A-M-F-B"
+    milsymAlive: "SFACMFB---*-***"
+    milsymDamaged: "SFADMFB---*-***"
+    milsymDestroyed: "SFAXMFB---*-***"
+    notes: ["Neutral/scripted bomber variant"]
+
+  U2:
+    role: FixedWing
+    type: "a-f-A-M-F-Q-R-Z"
+    milsymAlive: "SFACMFQRZ-*-***"
+    milsymDamaged: "SFADMFQRZ-*-***"
+    milsymDestroyed: "SFAXMFQRZ-*-***"
+    notes: ["Neutral/scripted spy plane"]
