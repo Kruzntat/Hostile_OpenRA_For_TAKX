@@ -51,3 +51,8 @@ update.log
 
 # IntelliJ files
 .idea
+
+# AI
+.claude
+CLAUDE.md
+.vscode
