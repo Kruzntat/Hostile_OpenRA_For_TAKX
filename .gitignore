@@ -36,14 +36,16 @@ Settings.md
 *.html
 openra.6
 update.log
-.msCoverageSourceRootsMap
+.msCoverageSourceRootsMapping*
 
 # SublimeText
 *.sublime-project
 *.sublime-workspace
 
-# NUnit
+# NUnit / dotnet test
 /TestResult.xml
+TestResults/
+*.trx
 /lib/
 
 # Support directory
